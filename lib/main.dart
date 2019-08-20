@@ -36,25 +36,7 @@ class App extends StatelessWidget {
         }
       },
     );
-    // return MaterialApp(
-    //   theme: ThemeData(
-    //     brightness: Brightness.dark,
-    //   ),
-    //   home: FutureBuilder(
-    //     future: getApplicationDocumentsDirectory(),
-    //     builder: (context,snapshot){
-    //       if(snapshot.connectionState==ConnectionState.done){
-    //         return Data(
-    //           favorites: Favorites(directory: snapshot.data),
-    //           child: Home(),
-    //         );
-    //       }
-    //       else{
-    //         return Center(child: CircularProgressIndicator(),);
-    //       }
-    //     },
-    //   ),
-    // );
+    
   }
 }
 
@@ -71,61 +53,14 @@ class Data extends InheritedWidget {
       context.inheritFromWidgetOfExactType(Data);
 }
 
-// class Favorites extends InheritedWidget{
-//   final favorites=Data();
-// }
 
-// class Favorites {
-//   static Future<String> get path async {
-//     final directory = await getApplicationDocumentsDirectory();
-//     return directory.path;
-//   }
-
-//   static Future<File> get file async {
-//     final path = await Favorites.path;
-//     return File('$path/favorites.txt');
-//   }
-
-//   static Future<List<String>> get() async {
-//     final file = await Favorites.file;
-//     final contents = await file.readAsString();
-//     return contents.split(',');
-//   }
-
-//   static set(List<String> value) async {
-//     final file = await Favorites.file;
-//     file.writeAsString(value.join(','));
-//   }
-
-//   static add(String value) async {
-//     final file = await Favorites.file;
-//     file.writeAsString(
-//       ',$value',
-//       mode: FileMode.APPEND,
-//     );
-//   }
-
-//   static remove(String value) async {
-//     final file = await Favorites.file;
-//     List<String> contents = await Favorites.get();
-//     contents.remove(value);
-//     Favorites.set(contents);
-//   }
-// }
 
 class Favorites {
   Directory directory;
   String path;
   File file;
   List<String> data;
-  Favorites({this.directory, this.path, this.file, this.data}); //{
-  //   path = directory.path;
-  //   print(directory.path);
-  //   print(path);
-  //   file = File('$path/favorites.txt');
-  //   file.createSync();
-  //   data = file.readAsStringSync().split(',');
-  // }
+  Favorites({this.directory, this.path, this.file, this.data}); 
   static Future<Favorites> load() async {
     var directory = await getApplicationDocumentsDirectory();
     var path = directory.path;
@@ -142,38 +77,7 @@ class Favorites {
   }
 }
 
-// class Breeds{
-//     List<Breed> breeds;
 
-//     Breeds(this.breeds);
-
-//     Breeds.fromJson(json){
-//       var map=jsonDecode(json)['message'];
-//       breeds=List.generate(map., generator)
-//     }
-// }
-
-// class Breed{
-//   final String name;
-//   final List<SubBreed> subBreeds;
-
-//   Breed(this.name,subBreeds):
-//     this.subBreeds=List.generate(subBreeds.length, (i)=>SubBreed(name,subBreeds[i]));
-// }
-
-// class SubBreed{
-//   final String parent;
-//   final String name;
-
-//   SubBreed(this.parent,this.name);
-
-//   Future<String> randomPicture()async{
-//     var jsonString = await http.get('https://dog.ceo/api/breed/$parent/$name/images/random');
-//     var json=jsonDecode(jsonString.body);
-//     assert (json['status']=='success');
-//     return json['message'];
-//   }
-// }
 
 class Home extends StatefulWidget {
   Future<Map> breeds;
@@ -208,18 +112,7 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
-    // return Scaffold(
-    //     appBar: AppBar(
-    //       title: Text('Home Screen'),
-    //     ),
-    //     body: ListView(
-    //       children: List.generate(
-    //           20,
-    //           (i) => Category(
-    //               ganre: 'Dogs $i',
-    //               thambnails: List.generate(
-    //                   20, (j) => new Thambnail(image: images[i * 20 + j])))),
-    //     ));
+    
     return Scaffold(
       appBar: AppBar(
         title: Text('Dogs'),
@@ -357,15 +250,7 @@ class Category extends StatelessWidget {
           children: <Widget>[
             FlatButton(
               onPressed: () {
-                // showDialog(
-                //   context: context,
-                //   builder: (context){
-                //     return AlertDialog(
-                //       title: Text('redirect'),
-                //       content: Text('you are redirected to a new page'),
-                //     );
-                //   }
-                // );
+                
                 Navigator.push(
                   context,
                   MaterialPageRoute(
