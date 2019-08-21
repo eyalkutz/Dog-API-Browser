@@ -116,6 +116,17 @@ class _HomeState extends State<Home> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Dogs'),
+        actions: <Widget>[
+            IconButton(
+              icon: Icon(Icons.bookmark),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => FavoritesView()),
+                );
+              },
+            )
+          ],
       ),
       body: FutureBuilder(
         future: widget.breeds,
@@ -362,6 +373,17 @@ class Breed extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text((subBreed != null) ? subBreed : breed),
+        actions: <Widget>[
+            IconButton(
+              icon: Icon(Icons.bookmark),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => FavoritesView()),
+                );
+              },
+            )
+          ],
       ),
       body: FutureBuilder(
         future: images,
