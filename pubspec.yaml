@@ -20,8 +20,8 @@ dependencies:
   http: any
   transparent_image: any
   cached_network_image: any
-  flutter_email_sender: any
-  shared_preferences: ^0.5.3+2
+  share: ^0.6.2+1
+  photo_view: ^0.4.2
   flutter:
     sdk: flutter
 

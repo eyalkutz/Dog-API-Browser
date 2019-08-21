@@ -7,6 +7,9 @@ import 'package:flutter/services.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:path_provider/path_provider.dart';
 import 'lifecycle_event_handler.dart';
+import 'package:share/share.dart';
+import 'package:photo_view/photo_view.dart';
+import 'package:photo_view/photo_view_gallery.dart';
 
 main(List<String> args) {
   runApp(App());
@@ -15,7 +18,6 @@ main(List<String> args) {
 class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    
     return FutureBuilder(
       future: Favorites.load(),
       builder: (context, snapshot) {
@@ -36,15 +38,14 @@ class App extends StatelessWidget {
         }
       },
     );
-    
   }
 }
 
 class Data extends InheritedWidget {
   final Favorites favorites;
-  Data({Widget child, this.favorites}) : super(child: child){
+  Data({Widget child, this.favorites}) : super(child: child) {
     WidgetsBinding.instance.addObserver(LifecycleEventHandler(
-    onSuspending: favorites.save,
+      onSuspending: favorites.save,
     ));
   }
   @override
@@ -53,14 +54,12 @@ class Data extends InheritedWidget {
       context.inheritFromWidgetOfExactType(Data);
 }
 
-
-
 class Favorites {
   Directory directory;
   String path;
   File file;
   List<String> data;
-  Favorites({this.directory, this.path, this.file, this.data}); 
+  Favorites({this.directory, this.path, this.file, this.data});
   static Future<Favorites> load() async {
     var directory = await getApplicationDocumentsDirectory();
     var path = directory.path;
@@ -70,14 +69,12 @@ class Favorites {
     return Favorites(directory: directory, path: path, file: file, data: data);
   }
 
-  void save()async{
+  void save() async {
     await file.writeAsString(data.join(','));
     var content = await file.readAsString();
     print(content);
   }
 }
-
-
 
 class Home extends StatefulWidget {
   Future<Map> breeds;
@@ -112,21 +109,20 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
-    
     return Scaffold(
       appBar: AppBar(
         title: Text('Dogs'),
         actions: <Widget>[
-            IconButton(
-              icon: Icon(Icons.bookmark),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => FavoritesView()),
-                );
-              },
-            )
-          ],
+          IconButton(
+            icon: Icon(Icons.bookmark),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => FavoritesView()),
+              );
+            },
+          )
+        ],
       ),
       body: FutureBuilder(
         future: widget.breeds,
@@ -229,8 +225,6 @@ class Thambnail extends StatelessWidget {
   }
 }
 
-
-
 class Category extends StatelessWidget {
   final String breed;
   final List<String> subBreeds;
@@ -261,7 +255,6 @@ class Category extends StatelessWidget {
           children: <Widget>[
             FlatButton(
               onPressed: () {
-                
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -374,16 +367,16 @@ class Breed extends StatelessWidget {
       appBar: AppBar(
         title: Text((subBreed != null) ? subBreed : breed),
         actions: <Widget>[
-            IconButton(
-              icon: Icon(Icons.bookmark),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => FavoritesView()),
-                );
-              },
-            )
-          ],
+          IconButton(
+            icon: Icon(Icons.bookmark),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => FavoritesView()),
+              );
+            },
+          )
+        ],
       ),
       body: FutureBuilder(
         future: images,
@@ -506,17 +499,29 @@ class Zoom extends StatelessWidget {
                   MaterialPageRoute(builder: (context) => FavoritesView()),
                 );
               },
+            ),
+            IconButton(
+              icon: Icon(Icons.share),
+              onPressed: () => Share.share(image),
             )
           ],
         ),
         body: Center(
-          child: Hero(
-            tag: image,
-            child: CachedNetworkImage(
-              placeholder: (context, url) =>
-                  Center(child: CircularProgressIndicator()),
-              imageUrl: image,
-            ),
+          child: Container(
+            width: double.infinity,
+              child: PhotoView.customChild(
+                childSize: Size(10, 10),
+                child: Hero(
+                  tag: image,
+                  child: CachedNetworkImage(
+                    fit: BoxFit.fitWidth,
+                    placeholder: (context, url) =>
+                        Center(child: CircularProgressIndicator()),
+                    imageUrl: image,
+                  ),
+                ),
+              ),
+            
           ),
         ),
         floatingActionButton: ToggleButton(
@@ -580,10 +585,45 @@ class _FavoritesViewState extends State<FavoritesView> {
         appBar: AppBar(),
         body: ListView(
           children: <Widget>[
-            ...Data.of(context).favorites.data.map((url) => CachedNetworkImage(
-                  imageUrl: url,
+            ...Data.of(context).favorites.data.map((url) => Dismissible(
+                  background: Container(
+                    color: Colors.red,
+                    alignment: Alignment.center,
+                    child: Text(
+                      'Delete',
+                      style: TextStyle(
+                        fontSize: 80.0,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  key: Key(url),
+                  onDismissed: (direction) => setState(
+                      () => Data.of(context).favorites.data.remove(url)),
+                  child: FlatButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => Zoom(
+                                  image: url,
+                                )),
+                      );
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      child: Hero(
+                        tag: url,
+                        child: CachedNetworkImage(
+                          fit: BoxFit.fitWidth,
+                          imageUrl: url,
+                        ),
+                      ),
+                    ),
+                  ),
                 )),
             FlatButton(
+              padding: EdgeInsets.all(0.0),
               child: Text('clear all'),
               onPressed: () {
                 Data.of(context).favorites.data = <String>[];
