@@ -45,7 +45,7 @@ class Data extends InheritedWidget {
   final Favorites favorites;
   Data({Widget child, this.favorites}) : super(child: child) {
     WidgetsBinding.instance.addObserver(LifecycleEventHandler(
-      onSuspending: favorites.save,
+      onPaused: favorites.save,
     ));
   }
   @override
