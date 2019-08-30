@@ -10,96 +10,111 @@ import 'lifecycle_event_handler.dart';
 import 'package:share/share.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
+import 'package:provider/provider.dart';
 
 main(List<String> args) {
-  runApp(App());
+  runApp(AppData());
 }
 
-class App extends StatelessWidget {
+class AppData extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
-      future: Favorites.load(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.done) {
-          return Data(
-            favorites: snapshot.data,
-            child: MaterialApp(
-              theme: ThemeData(brightness: Brightness.dark),
-              home: Home(),
-            ),
+      future: _loadData(),
+      builder: (BuildContext context,AsyncSnapshot snapshot){
+        if(snapshot.connectionState==ConnectionState.done){
+          Data data=snapshot.data;
+          return MultiProvider(
+            providers: <Provider>[
+              Provider<Favorites>.value(value: data.favorites,),
+              Provider<Settings>.value(value: data.settings,)
+            ],
+            child: App(),
           );
-        } else {
+        }
+        else{
           return Material(
             child: Center(
               child: CircularProgressIndicator(),
             ),
-          );
+          ); 
         }
       },
     );
   }
+
+  Future<Data> _loadData() async{
+    return Data(
+      favorites: await Favorites.load(),
+      settings: await Settings.load(),
+    );
+  }
 }
 
-class Data extends InheritedWidget {
-  final Favorites favorites;
-  Data({Widget child, this.favorites}) : super(child: child) {
-    WidgetsBinding.instance.addObserver(LifecycleEventHandler(
-      onPaused: favorites.save,
-    ));
-  }
+class Data{
+  Settings settings;
+  Favorites favorites;
+  Data({this.favorites,this.settings});
+}
+
+class App extends StatefulWidget {
   @override
-  bool updateShouldNotify(InheritedWidget oldWidget) => true;
-  static Data of(BuildContext context) =>
-      context.inheritFromWidgetOfExactType(Data);
+  _AppState createState() => _AppState();
+}
+
+class _AppState extends State<App> {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      theme: ThemeData(
+        brightness: Provider.of<Settings>(context).brightness
+      ),
+      home: Home(),
+    );
+  }
 }
 
 class Favorites {
-  Directory directory;
-  String path;
   File file;
   List<String> data;
-  Favorites({this.directory, this.path, this.file, this.data});
+  Favorites({this.file, this.data}){
+    WidgetsBinding.instance.addObserver(LifecycleEventHandler(
+      onPaused: save,
+    ));
+  }
+
   static Future<Favorites> load() async {
     var directory = await getApplicationDocumentsDirectory();
     var path = directory.path;
     var file = await File('$path/favorites.txt').create();
     var rawData = await file.readAsString();
     var data = rawData.split(',');
-    return Favorites(directory: directory, path: path, file: file, data: data);
+    return Favorites(file: file, data: data);
   }
 
   void save() async {
     await file.writeAsString(data.join(','));
-    var content = await file.readAsString();
-    print(content);
+  }
+}
+
+class Settings {
+  Brightness brightness=Brightness.dark;
+  static Future<Settings> load() async{
+    //TODO: implement [load] and [save] methods for [Settings]
+    return Settings();
   }
 }
 
 class Home extends StatefulWidget {
-  Future<Map> breeds;
-  final breed;
+  final Future<Map> breeds = getbreeds();
 
-  Home([this.breed]) {
-    breeds = getbreeds(breed);
-  }
+  Home();
 
-  static Future<Map> getbreeds([breed]) async {
-    var json;
-    if (breed == null) {
-      json = await http.get('https://dog.ceo/api/breeds/list/all');
-    } else {
-      json = await http.get('https://dog.ceo/api/breed/$breed/list');
-    }
+  static Future<Map> getbreeds() async {
+    var json = await http.get('https://dog.ceo/api/breeds/list/all');
     var map = jsonDecode(json.body);
     assert(map['status'] == 'success');
-    if (breed == null) {
-      return map['message'];
-    } else {
-      Map newmap = Map();
-      map['message'].forEach((item) => newmap[item] = []);
-      return newmap;
-    }
+    return map['message'];
   }
 
   @override
@@ -110,17 +125,54 @@ class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: <Widget>[
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                vertical: 150,
+                horizontal: 10,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  Icon(Theme.of(context).brightness==Brightness.light?Icons.brightness_high:Icons.brightness_3),
+                  Switch(
+                    value: false,
+                    onChanged: (bool activated){
+                      if(activated){
+                        Provider.of<Settings>(context).brightness=Brightness.light;
+                      }
+                      else{
+                        Provider.of<Settings>(context).brightness=Brightness.dark;
+                      }
+                    },
+                  )
+                ],
+              ),
+            )
+          ],
+        ),
+      ),
       appBar: AppBar(
         title: Text('Dogs'),
         actions: <Widget>[
           IconButton(
-            icon: Icon(Icons.bookmark),
+            icon: Icon(Icons.favorite),
             onPressed: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => FavoritesView()),
               );
             },
+          ),
+          IconButton(
+            icon: Icon(Icons.code),
+            onPressed:()=> Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context)=>Experiment())
+              ),
           )
         ],
       ),
@@ -129,18 +181,20 @@ class _HomeState extends State<Home> {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
             if (snapshot.hasData) {
-              List<Category> categories = [];
-              snapshot.data.forEach((key, value) => categories.add(Category(
-                    breed: key,
-                    subBreeds: value.cast<String>(),
-                  )));
               return RefreshIndicator(
                 onRefresh: () {
                   setState(() {});
                   return Future.delayed(Duration(seconds: 1));
                 },
-                child: ListView(
-                  children: categories,
+                child: ListView.builder(
+                  itemCount: snapshot.data.length,
+                  itemBuilder: (context, i) {
+                    return Category(
+                      breed: snapshot.data.keys.elementAt(i),
+                      subBreeds:
+                          snapshot.data.values.elementAt(i).cast<String>(),
+                    );
+                  },
                 ),
               );
             } else {
@@ -368,7 +422,7 @@ class Breed extends StatelessWidget {
         title: Text((subBreed != null) ? subBreed : breed),
         actions: <Widget>[
           IconButton(
-            icon: Icon(Icons.bookmark),
+            icon: Icon(Icons.favorite),
             onPressed: () {
               Navigator.push(
                 context,
@@ -395,104 +449,74 @@ class Breed extends StatelessWidget {
   }
 }
 
-class ImageDisplay extends StatefulWidget {
+Size getSize(GlobalKey key) {
+  RenderBox renderBox = key.currentContext.findRenderObject();
+  Size size = renderBox.size;
+  return size;
+}
+
+class ImageDisplay extends StatelessWidget {
   const ImageDisplay({
     Key key,
     @required this.pics,
   }) : super(key: key);
 
-  final List pics;
-
-  @override
-  _ImageDisplayState createState() => _ImageDisplayState();
-}
-
-class _ImageDisplayState extends State<ImageDisplay> {
-  int length;
-  ScrollController _controller;
-  List pics;
-
-  void scrollListener() {
-    if (_controller.offset >= _controller.position.maxScrollExtent * 0.95 &&
-        !_controller.position.outOfRange) {
-      setState(() {
-        if (length + 10 <= widget.pics.length) {
-          length += 10;
-        } else {
-          length = widget.pics.length;
-        }
-      });
-    }
-  }
-
-  @override
-  void initState() {
-    pics = widget.pics
-        .map((image) {
-          return Container(
-            padding: EdgeInsets.all(8.0),
-            height: 110,
-            width: 110,
-            //width: 100,
-            child: InkWell(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => Zoom(
-                            image: image,
-                          )),
-                );
-              },
-              child: Hero(
-                tag: image,
-                child: CachedNetworkImage(
-                  placeholder: (context, x) =>
-                      Center(child: CircularProgressIndicator()),
-                  imageUrl: image,
-                ),
-              ),
-            ),
-          );
-        })
-        .toList()
-        .cast<Container>();
-
-    _controller = ScrollController();
-    _controller.addListener(scrollListener);
-
-    if (widget.pics.length <= 40) {
-      length = widget.pics.length;
-    } else {
-      length = 40;
-    }
-
-    super.initState();
-  }
+  final List<String> pics;
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      controller: _controller,
-      child: Wrap(
-        children: pics.getRange(0, length).toList(),
-      ),
+    double picSize = MediaQuery.of(context).size.width / 3;
+    return GridView.builder(
+      itemCount: pics.length,
+      gridDelegate:
+          SliverGridDelegateWithMaxCrossAxisExtent(maxCrossAxisExtent: picSize),
+      addAutomaticKeepAlives: false,
+      addRepaintBoundaries: false,
+      itemBuilder: (context, i) {
+        String image = pics[i];
+        GlobalKey imageKey = GlobalKey();
+        return FlatButton(
+          padding: EdgeInsets.all(5.0),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => Zoom(
+                          imageSize: getSize(imageKey),
+                          image: image,
+                        )),
+              );
+            },
+            child: Hero(
+              tag: image,
+              child: CachedNetworkImage(
+                key: imageKey,
+                placeholder: (context, x) =>
+                    Center(child: CircularProgressIndicator()),
+                imageUrl: image,
+              ),
+            ),
+          
+        );
+      },
     );
   }
 }
 
 class Zoom extends StatelessWidget {
-  String image;
-  Key key;
+  final String image;
+  final Key key;
+  final Size imageSize;
 
-  Zoom({this.image, this.key}) : super(key: key);
+  const Zoom({this.image, this.key, this.imageSize}) : super(key: key);
   @override
   Widget build(BuildContext context) {
+    assert(imageSize != null);
     return Scaffold(
         appBar: AppBar(
           actions: <Widget>[
             IconButton(
-              icon: Icon(Icons.bookmark),
+              icon: Icon(Icons.favorite),
               onPressed: () {
                 Navigator.push(
                   context,
@@ -508,29 +532,33 @@ class Zoom extends StatelessWidget {
         ),
         body: Center(
           child: Container(
-            width: double.infinity,
-              child: PhotoView.customChild(
-                childSize: Size(10, 10),
-                child: Hero(
-                  tag: image,
-                  child: CachedNetworkImage(
-                    fit: BoxFit.fitWidth,
-                    placeholder: (context, url) =>
-                        Center(child: CircularProgressIndicator()),
-                    imageUrl: image,
-                  ),
+            child: PhotoView.customChild(
+              childSize: imageSize,
+              child: Hero(
+                tag: image,
+                child: CachedNetworkImage(
+                  fit: BoxFit.contain,
+                  placeholder: (context, url) =>
+                      Center(child: CircularProgressIndicator()),
+                  imageUrl: image,
                 ),
               ),
-            
+            ),
           ),
         ),
         floatingActionButton: ToggleButton(
-          deactivatedIcon: Icon(Icons.bookmark_border),
-          activatedIcon: Icon(Icons.bookmark),
-          onActivated: () => Data.of(context).favorites.data.add(image),
-          onDeactivated: () => Data.of(context).favorites.data.remove(image),
-          isActivated: () => Data.of(context).favorites.data.contains(image),
-          color: Colors.blue,
+          deactivatedIcon: Icon(
+            Icons.favorite_border,
+            color: Colors.white,
+          ),
+          activatedIcon: Icon(
+            Icons.favorite,
+            color: Colors.white,
+          ),
+          onActivated: () => Provider.of<Favorites>(context).data.add(image),
+          onDeactivated: () => Provider.of<Favorites>(context).data.remove(image),
+          isActivated: () => Provider.of<Favorites>(context).data.contains(image),
+          color: Colors.red,
         ));
   }
 }
@@ -550,19 +578,18 @@ class ToggleButton extends StatefulWidget {
       this.color,
       this.isActivated});
   @override
-  _ToggleButtonState createState() => _ToggleButtonState(isActivated);
+  _ToggleButtonState createState() => _ToggleButtonState();
 }
 
 class _ToggleButtonState extends State<ToggleButton> {
-  Function selected;
-  _ToggleButtonState(this.selected);
+  _ToggleButtonState();
   @override
   Widget build(BuildContext context) {
     return FloatingActionButton(
       backgroundColor: widget.color,
-      child: selected() ? widget.activatedIcon : widget.deactivatedIcon,
+      child: widget.isActivated() ? widget.activatedIcon : widget.deactivatedIcon,
       onPressed: () {
-        if (selected()) {
+        if (widget.isActivated()) {
           widget.onDeactivated();
         } else {
           widget.onActivated();
@@ -582,55 +609,86 @@ class _FavoritesViewState extends State<FavoritesView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(),
-        body: ListView(
-          children: <Widget>[
-            ...Data.of(context).favorites.data.map((url) => Dismissible(
-                  background: Container(
-                    color: Colors.red,
-                    alignment: Alignment.center,
-                    child: Text(
-                      'Delete',
-                      style: TextStyle(
-                        fontSize: 80.0,
-                        fontWeight: FontWeight.bold,
+        appBar: AppBar(
+          title: Text('Favorites'),
+        ),
+        body: ListView.builder(
+          itemCount: Provider.of<Favorites>(context).data.length+1,
+          itemBuilder: (context, i) {
+            if (Provider.of<Favorites>(context).data.length > i) {
+              String url = Provider.of<Favorites>(context).data[i];
+              GlobalKey imageKey = GlobalKey();
+              return Dismissible(
+                background: Container(
+                  color: Colors.red,
+                  alignment: Alignment.center,
+                  child: Text(
+                    'Delete',
+                    style: TextStyle(
+                      fontSize: 80.0,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                key: Key(url),
+                onDismissed: (direction) =>
+                    setState(() => Provider.of<Favorites>(context).data.remove(url)),
+                child: FlatButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => Zoom(
+                                imageSize: getSize(imageKey),
+                                image: url,
+                              )),
+                    );
+                  },
+                  child: Container(
+                    width: double.infinity,
+                    child: Hero(
+                      tag: url,
+                      child: CachedNetworkImage(
+                        key: imageKey,
+                        fit: BoxFit.fitWidth,
+                        imageUrl: url,
                       ),
                     ),
                   ),
-                  key: Key(url),
-                  onDismissed: (direction) => setState(
-                      () => Data.of(context).favorites.data.remove(url)),
-                  child: FlatButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => Zoom(
-                                  image: url,
-                                )),
-                      );
-                    },
-                    child: Container(
-                      width: double.infinity,
-                      child: Hero(
-                        tag: url,
-                        child: CachedNetworkImage(
-                          fit: BoxFit.fitWidth,
-                          imageUrl: url,
-                        ),
-                      ),
-                    ),
-                  ),
-                )),
-            FlatButton(
-              padding: EdgeInsets.all(0.0),
-              child: Text('clear all'),
-              onPressed: () {
-                Data.of(context).favorites.data = <String>[];
-                setState(() {});
-              },
-            )
-          ],
+                ),
+              );
+            }
+            else{
+              return FlatButton(
+                padding: EdgeInsets.all(0.0),
+                child: Text('clear all'),
+                onPressed: () {
+                  Provider.of<Favorites>(context).data = <String>[];
+                  setState(() {});
+                },
+              );
+            }
+          },
         ));
+  }
+}
+
+class Experiment extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: PhotoViewGallery.builder(
+        itemCount: Provider.of<Favorites>(context).data.length,
+        builder: (BuildContext context,int i){
+          return PhotoViewGalleryPageOptions.customChild(
+            childSize: Size(10,10),
+            child: CachedNetworkImage(
+              placeholder: (BuildContext context,String url)=>CircularProgressIndicator(),
+              imageUrl: Provider.of<Favorites>(context).data[i],
+            )
+          );
+        },
+      ),
+    );
   }
 }

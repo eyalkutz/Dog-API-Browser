@@ -7,9 +7,9 @@
          additional functionality it is fine to subclass or reimplement
          FlutterApplication and put your custom class here. -->
     <application
-        android:hardwareAccelerated="false"
+        android:hardwareAccelerated="true"
         android:name="io.flutter.app.FlutterApplication"
-        android:label="google_play_recreation"
+        android:label="Dog API"
         android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"
