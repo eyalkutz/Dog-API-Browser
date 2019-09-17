@@ -23,6 +23,8 @@ dependencies:
   share: ^0.6.2+1
   photo_view: ^0.4.2
   provider: ^3.1.0
+  json_annotation: ^3.0.0
+  flutter_cache_manager: ^1.1.1
   flutter:
     sdk: flutter
 
@@ -55,7 +57,7 @@ flutter:
   # https://flutter.dev/assets-and-images/#resolution-aware.
 
   # For details regarding adding assets from package dependencies, see
-  # https://flutter.dev/assets-and-images/#from-packages
+  #https://flutter.dev/assets-and-images/#from-packages
 
   # To add custom fonts to your application, add a fonts section here,
   # in this "flutter" section. Each entry in this list should have a

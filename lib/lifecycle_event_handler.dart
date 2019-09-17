@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 
 class LifecycleEventHandler extends WidgetsBindingObserver {
-  LifecycleEventHandler({this.onResume=_doNothing, this.onSuspending=_doNothing,this.onInactive=_doNothing,this.onPaused=_doNothing});
+  LifecycleEventHandler(
+      {this.onResume = _doNothing,
+      this.onSuspending = _doNothing,
+      this.onInactive = _doNothing,
+      this.onPaused = _doNothing});
 
   final Function onResume;
   final Function onSuspending;
@@ -30,20 +34,7 @@ class LifecycleEventHandler extends WidgetsBindingObserver {
         await onResume();
         break;
     }
-    
   }
-
-//  @override
-//  void didChangeLocale(Locale locale)
-
-//  @override
-//  void didChangeTextScaleFactor()
-
-//  @override
-//  void didChangeMetrics();
-
-//  @override
-//  Future<bool> didPushRoute(String route)
-  
 }
-void _doNothing(){}
+
+void _doNothing() {}
