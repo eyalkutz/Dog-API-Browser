@@ -1,10 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:google_play_recreation/CachedNetworkImage.dart' as prefix0;
-import 'package:google_play_recreation/getSize.dart';
 import 'breed.dart';
 import 'data.dart';
-import 'experiment.dart';
 import 'favoritesView.dart';
 import 'menu.dart';
 

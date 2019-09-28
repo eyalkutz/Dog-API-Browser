@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'favoritesView.dart';
 import 'menu.dart';
 import 'data.dart';
-import 'other.dart';
 import 'zoom.dart';
 
 class Breed extends StatelessWidget {
@@ -22,22 +21,7 @@ class Breed extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       drawer: Menu(),
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        leading: BackButton(),
-        title: Text((subBreed != null) ? subBreed : breed),
-        actions: <Widget>[
-          IconButton(
-            icon: Icon(Icons.favorite),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => FavoritesView()),
-              );
-            },
-          )
-        ],
-      ),
+      appBar: buildAppBar(context),
       body: FutureBuilder(
         future: images,
         builder: (context, snapshot) {
@@ -51,6 +35,25 @@ class Breed extends StatelessWidget {
           }
         },
       ),
+    );
+  }
+
+  AppBar buildAppBar(BuildContext context) {
+    return AppBar(
+      automaticallyImplyLeading: false,
+      leading: BackButton(),
+      title: Text((subBreed != null) ? subBreed : breed),
+      actions: <Widget>[
+        IconButton(
+          icon: Icon(Icons.favorite),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => FavoritesView()),
+            );
+          },
+        )
+      ],
     );
   }
 }
@@ -74,28 +77,46 @@ class ImageDisplay extends StatelessWidget {
       addRepaintBoundaries: false,
       itemBuilder: (context, i) {
         String image = pics[i];
-        return FlatButton(
-          padding: EdgeInsets.all(5.0),
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => Zoom(
-                        images: pics,
-                        initial: i,
-                      )),
-            );
-          },
-          child: Hero(
-            tag: image,
-            child: CachedNetworkImage(
-              placeholder: (context, x) =>
-                  Center(child: CircularProgressIndicator()),
-              imageUrl: image,
-            ),
-          ),
+        return Thambnail(pics: pics, image: image,i: i,);
+      },
+    );
+  }
+}
+
+class Thambnail extends StatelessWidget {
+  const Thambnail({
+    Key key,
+    @required this.pics,
+    @required this.image,
+    @required this.i
+  }) : super(key: key);
+
+  final List<String> pics;
+  final String image;
+  final int i;
+
+  @override
+  Widget build(BuildContext context) {
+    return FlatButton(
+      padding: EdgeInsets.all(5.0),
+      onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => Zoom(
+                    images: pics,
+                    initial: i,
+                  )),
         );
       },
+      child: Hero(
+        tag: image,
+        child: CachedNetworkImage(
+          placeholder: (context, x) =>
+              Center(child: CircularProgressIndicator()),
+          imageUrl: image,
+        ),
+      ),
     );
   }
 }

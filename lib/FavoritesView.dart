@@ -1,4 +1,3 @@
-import 'dart:math';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -6,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'menu.dart';
 import 'data.dart';
-import 'other.dart';
 import 'zoom.dart';
 
 class FavoritesView extends StatefulWidget {
@@ -19,11 +17,7 @@ class _FavoritesViewState extends State<FavoritesView> {
   Widget build(BuildContext context) {
     return Scaffold(
         drawer: Menu(),
-        appBar: AppBar(
-          automaticallyImplyLeading: false,
-          leading: BackButton(),
-          title: Text('Favorites'),
-        ),
+        appBar: buildAppBar(),
         body: Consumer<Favorites>(
           builder: (BuildContext context, Favorites favorites, Widget child) {
             return ListView.builder(
@@ -31,7 +25,6 @@ class _FavoritesViewState extends State<FavoritesView> {
               itemBuilder: (context, i) {
                 if (favorites.length > i) {
                   String url = favorites.data[i];
-                  GlobalKey imageKey = GlobalKey();
                   return Dismissible(
                     background: Container(
                       color: Colors.red,
@@ -61,7 +54,6 @@ class _FavoritesViewState extends State<FavoritesView> {
                         child: Hero(
                           tag: url,
                           child: CachedNetworkImage(
-                            key: imageKey,
                             fit: BoxFit.fitWidth,
                             imageUrl: url,
                           ),
@@ -83,6 +75,14 @@ class _FavoritesViewState extends State<FavoritesView> {
             );
           },
         ));
+  }
+
+  AppBar buildAppBar() {
+    return AppBar(
+        automaticallyImplyLeading: false,
+        leading: BackButton(),
+        title: Text('Favorites'),
+      );
   }
 }
 
