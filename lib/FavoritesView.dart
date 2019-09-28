@@ -1,8 +1,10 @@
+import 'dart:math';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import 'package:provider/provider.dart';
-import 'Menu.dart';
+import 'menu.dart';
 import 'data.dart';
 import 'other.dart';
 import 'zoom.dart';
@@ -18,64 +20,84 @@ class _FavoritesViewState extends State<FavoritesView> {
     return Scaffold(
         drawer: Menu(),
         appBar: AppBar(
+          automaticallyImplyLeading: false,
+          leading: BackButton(),
           title: Text('Favorites'),
         ),
-        body: ListView.builder(
-          itemCount: Provider.of<Favorites>(context).data.length + 1,
-          itemBuilder: (context, i) {
-            if (Provider.of<Favorites>(context).data.length > i) {
-              String url = Provider.of<Favorites>(context).data[i];
-              GlobalKey imageKey = GlobalKey();
-              return Dismissible(
-                background: Container(
-                  color: Colors.red,
-                  alignment: Alignment.center,
-                  child: Text(
-                    'Delete',
-                    style: TextStyle(
-                      fontSize: 80.0,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                key: Key(url),
-                onDismissed: (direction) => setState(
-                    () => Provider.of<Favorites>(context).data.remove(url)),
-                child: InkWell(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => Zoom(
-                                imageSize: getSize(imageKey),
-                                image: url,
-                              )),
-                    );
-                  },
-                                  child: Container(
-                    width: double.infinity,
-                    child: Hero(
-                      tag: url,
-                      child: CachedNetworkImage(
-                        key: imageKey,
-                        fit: BoxFit.fitWidth,
-                        imageUrl: url,
+        body: Consumer<Favorites>(
+          builder: (BuildContext context, Favorites favorites, Widget child) {
+            return ListView.builder(
+              itemCount: favorites.length + 1,
+              itemBuilder: (context, i) {
+                if (favorites.length > i) {
+                  String url = favorites.data[i];
+                  GlobalKey imageKey = GlobalKey();
+                  return Dismissible(
+                    background: Container(
+                      color: Colors.red,
+                      alignment: Alignment.center,
+                      child: Text(
+                        'Delete',
+                        style: TextStyle(
+                          fontSize: 80.0,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
-                  ),
-                ),
-              );
-            } else {
-              return FlatButton(
-                padding: EdgeInsets.all(0.0),
-                child: Text('clear all'),
-                onPressed: () {
-                  Provider.of<Favorites>(context).data = <String>[];
-                  setState(() {});
-                },
-              );
-            }
+                    key: Key(url),
+                    onDismissed: (direction) =>
+                        setState(() => favorites.remove(url)),
+                    child: InkWell(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) {
+                            return FavoritesZoom(initial: i);
+                          }),
+                        );
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        child: Hero(
+                          tag: url,
+                          child: CachedNetworkImage(
+                            key: imageKey,
+                            fit: BoxFit.fitWidth,
+                            imageUrl: url,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                } else {
+                  return FlatButton(
+                    padding: EdgeInsets.all(0.0),
+                    child: Text('clear all'),
+                    onPressed: () {
+                      favorites.data = <String>[];
+                      setState(() {});
+                    },
+                  );
+                }
+              },
+            );
           },
         ));
+  }
+}
+
+class FavoritesZoom extends StatelessWidget {
+  final int initial;
+  const FavoritesZoom({this.initial});
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<Favorites>(
+      builder: (BuildContext context,Favorites favorites,Widget child){
+        return Zoom(
+          images: favorites.data,
+          initial: initial<favorites.length?initial:favorites.length-1,
+        );
+      },
+    );
   }
 }

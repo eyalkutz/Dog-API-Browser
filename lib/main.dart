@@ -1,17 +1,5 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:google_play_recreation/ToggleButton.dart';
-import 'dart:convert';
-import 'dart:io';
-import 'package:http/http.dart' as http;
-import 'package:flutter/services.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:path_provider/path_provider.dart';
 import 'home.dart';
-import 'lifecycle_event_handler.dart';
-import 'package:share/share.dart';
-import 'package:photo_view/photo_view.dart';
-import 'package:photo_view/photo_view_gallery.dart';
 import 'package:provider/provider.dart';
 import 'data.dart';
 
@@ -34,8 +22,8 @@ class App extends StatelessWidget {
           Data data = snapshot.data;
           return MultiProvider(
               providers: [
-                Provider<Favorites>.value(
-                  value: data.favorites,
+                ChangeNotifierProvider(
+                  builder: (context)=>data.favorites,
                 ),
                 ChangeNotifierProvider<Settings>(
                   builder: (context) => data.settings,

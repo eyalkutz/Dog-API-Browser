@@ -1,8 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-
-import 'FavoritesView.dart';
-import 'Menu.dart';
+import 'favoritesView.dart';
+import 'menu.dart';
 import 'data.dart';
 import 'other.dart';
 import 'zoom.dart';
@@ -24,6 +23,8 @@ class Breed extends StatelessWidget {
     return Scaffold(
       drawer: Menu(),
       appBar: AppBar(
+        automaticallyImplyLeading: false,
+        leading: BackButton(),
         title: Text((subBreed != null) ? subBreed : breed),
         actions: <Widget>[
           IconButton(
@@ -73,7 +74,6 @@ class ImageDisplay extends StatelessWidget {
       addRepaintBoundaries: false,
       itemBuilder: (context, i) {
         String image = pics[i];
-        GlobalKey imageKey = GlobalKey();
         return FlatButton(
           padding: EdgeInsets.all(5.0),
           onPressed: () {
@@ -81,15 +81,14 @@ class ImageDisplay extends StatelessWidget {
               context,
               MaterialPageRoute(
                   builder: (context) => Zoom(
-                        imageSize: getSize(imageKey),
-                        image: image,
+                        images: pics,
+                        initial: i,
                       )),
             );
           },
           child: Hero(
             tag: image,
             child: CachedNetworkImage(
-              key: imageKey,
               placeholder: (context, x) =>
                   Center(child: CircularProgressIndicator()),
               imageUrl: image,

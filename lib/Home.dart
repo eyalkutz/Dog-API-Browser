@@ -1,26 +1,15 @@
-import 'dart:convert';
-
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
-
-import 'Breed.dart';
-import 'Data.dart';
-import 'Experiment.dart';
-import 'FavoritesView.dart';
-import 'Menu.dart';
+import 'package:google_play_recreation/CachedNetworkImage.dart' as prefix0;
+import 'package:google_play_recreation/getSize.dart';
+import 'breed.dart';
+import 'data.dart';
+import 'experiment.dart';
+import 'favoritesView.dart';
+import 'menu.dart';
 
 class Home extends StatefulWidget {
   final Future<Map> breeds = getbreeds();
-
-  Home();
-
-  static Future<Map> getbreeds() async {
-    var json = await http.get('https://dog.ceo/api/breeds/list/all');
-    var map = jsonDecode(json.body);
-    assert(map['status'] == 'success');
-    return map['message'];
-  }
 
   @override
   _HomeState createState() => _HomeState();
@@ -43,11 +32,8 @@ class _HomeState extends State<Home> {
               );
             },
           ),
-          IconButton(
-            icon: Icon(Icons.code),
-            onPressed: () => Navigator.push(
-                context, MaterialPageRoute(builder: (context) => Experiment())),
-          )
+          
+          
         ],
       ),
       body: FutureBuilder(
@@ -58,7 +44,7 @@ class _HomeState extends State<Home> {
               return RefreshIndicator(
                 onRefresh: () {
                   setState(() {});
-                  return Future.delayed(Duration(seconds: 1));
+                  return widget.breeds;
                 },
                 child: ListView.builder(
                   padding: EdgeInsets.all(8.0),
@@ -90,7 +76,6 @@ class Category extends StatelessWidget {
   final String breed;
   final List<String> subBreeds;
   List<Future<List<String>>> images = [];
-  double height = 200;
 
   Category({this.breed, this.subBreeds}) {
     if (subBreeds.length > 0) {
@@ -112,12 +97,11 @@ class Category extends StatelessWidget {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(15.0),
         ),
-        elevation: 5.0,
+        elevation: 3.0,
         child: Column(
           children: <Widget>[
             BreedButton(breed: breed),
             ThambnailList(
-                height: height,
                 images: images,
                 subBreeds: subBreeds,
                 breed: breed)
@@ -131,13 +115,11 @@ class Category extends StatelessWidget {
 class ThambnailList extends StatelessWidget {
   const ThambnailList({
     Key key,
-    @required this.height,
     @required this.images,
     @required this.subBreeds,
     @required this.breed,
   }) : super(key: key);
 
-  final double height;
   final List<Future<List<String>>> images;
   final List<String> subBreeds;
   final String breed;
@@ -145,35 +127,38 @@ class ThambnailList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final screenWidth=MediaQuery.of(context).size.width;
-          return OverflowBox(
-            maxWidth: screenWidth,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: images.length+2,
-              itemBuilder: (context, j) {
-                if(j==0 || j==images.length+1)
-                  return Container(width: (screenWidth- constraints.biggest.width)/2,);
-                final i=j-1;
-                return Thambnail(
-                  image: images[i],
-                  name: subBreeds.length == 0 ? breed : subBreeds[i],
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => Breed(
-                                breed: breed,
-                              )),
-                    );
-                  },
-                );
-              },
-            ),
-          );
-        },
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 10),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final screenWidth=MediaQuery.of(context).size.width;
+            return OverflowBox(
+              maxWidth: screenWidth,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: images.length+2,
+                itemBuilder: (context, j) {
+                  if(j==0 || j==images.length+1)
+                    return Container(width: (screenWidth- constraints.biggest.width)/2,);
+                  final i=j-1;
+                  return Thambnail(
+                    image: images[i],
+                    name: subBreeds.length == 0 ? breed : subBreeds[i],
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => Breed(
+                                  breed: breed,
+                                )),
+                      );
+                    },
+                  );
+                },
+              ),
+            );
+          },
+        ),
       ),
     );
   }
@@ -224,7 +209,7 @@ class Thambnail extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      elevation: 10,
+      elevation: 5,
       clipBehavior: Clip.hardEdge,
       child: InkWell(
         onTap: onPressed,

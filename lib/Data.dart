@@ -1,11 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
-
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
-
 import 'lifecycle_event_handler.dart';
-
 import 'package:path_provider/path_provider.dart';
 
 class Data {
@@ -19,7 +16,7 @@ class Data {
       );
 }
 
-class Favorites {
+class Favorites extends ChangeNotifier {
   File file;
   List<String> data;
   Favorites({this.file, this.data}) {
@@ -27,6 +24,29 @@ class Favorites {
       onPaused: save,
     ));
   }
+
+  void add(String value){
+    data.add(value);
+    notifyListeners();
+  }
+
+  void remove(String item){
+    data.remove(item);
+    notifyListeners();
+  }
+
+  void removeAt(int index){
+    data.removeAt(index);
+    notifyListeners();
+  }
+
+  void empty()=>data=<String>[];
+
+  bool contains(String item){
+    return data.contains(item);
+  }
+
+  int get length=>data.length;
 
   static Future<Favorites> load() async {
     var directory = await getApplicationDocumentsDirectory();
@@ -65,7 +85,7 @@ class Settings extends ChangeNotifier {
       {'brightness': brightness.index, 'primaryColor': primaryColor.value};
 
   File _file;
-  get file => _file;
+  File get file => _file;
 
   Brightness _brightness;
   Brightness get brightness => _brightness;
@@ -132,4 +152,11 @@ Future<List<String>> randomImages(
     } else
       throw "Can't load image";
   }
+}
+
+Future<Map> getbreeds() async {
+  var json = await http.get('https://dog.ceo/api/breeds/list/all');
+  var map = jsonDecode(json.body);
+  assert(map['status'] == 'success');
+  return map['message'];
 }

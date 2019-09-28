@@ -1,23 +1,62 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
+import 'package:photo_view/photo_view_gallery.dart';
 import 'package:share/share.dart';
 import 'package:provider/provider.dart';
 import 'FavoritesView.dart';
-import 'ToggleButton.dart';
+import 'toggleButton.dart';
 import 'data.dart';
 
 class Zoom extends StatelessWidget {
-  final String image;
+  final List<String> images;
   final Key key;
-  final Size imageSize;
+  final PageController controller;
+  int get current {
+    try {
+      return controller.page.toInt();
+    } catch (e) {
+      // if (!(e is AssertionError))
+      //   rethrow;
+      // else
+      return controller.initialPage;
+    }
+  }
 
-  const Zoom({this.image, this.key, this.imageSize}) : super(key: key);
+  // String get image => images[current];
+  final ValueNotifier<String> image = ValueNotifier<String>(null);
+  final ValueNotifier<int> index = ValueNotifier<int>(null);
+
+  Zoom({this.images, this.key, int initial})
+      : controller = PageController(initialPage: initial),
+        super(key: key) {
+    image.value = images[initial];
+    index.value = initial;
+    // _controller
+    //     .addListener(() => image.value = images[_controller.page.round()]);
+    controller.addListener(() => index.value = controller.page.round());
+    index.addListener(() => image.value = images[index.value]);
+  }
   @override
   Widget build(BuildContext context) {
-    assert(imageSize != null);
     return Scaffold(
         appBar: AppBar(
+          leading: IconButton(
+            icon: Icon(
+              Icons.arrow_back,
+              color: Colors.white,
+            ),
+            onPressed: () {
+              controller.dispose();
+              Navigator.pop(context);
+            },
+          ),
+          title: ValueListenableBuilder<int>(
+            valueListenable: index,
+            builder: (BuildContext context, int index, Widget child) {
+              return Text(index.toString());
+            },
+          ),
           actions: <Widget>[
             IconButton(
               icon: Icon(Icons.favorite),
@@ -30,41 +69,44 @@ class Zoom extends StatelessWidget {
             ),
             IconButton(
               icon: Icon(Icons.share),
-              onPressed: () => Share.share(image),
+              onPressed: () => Share.share(image.value),
             )
           ],
         ),
-        body: Center(
-          child: Container(
-            child: PhotoView.customChild(
-              childSize: imageSize,
-              child: Hero(
-                tag: image,
-                child: CachedNetworkImage(
-                  fit: BoxFit.contain,
-                  placeholder: (context, url) =>
-                      Center(child: CircularProgressIndicator()),
-                  imageUrl: image,
-                ),
-              ),
-            ),
-          ),
+        body: PhotoViewGallery.builder(
+          pageController: controller,
+          itemCount: images.length,
+          builder: (BuildContext context, int i) {
+            return PhotoViewGalleryPageOptions(
+              key: Key(images[i]),
+              imageProvider: CachedNetworkImageProvider(images[i]),
+              heroTag: images[i],
+            );
+          },
         ),
-        floatingActionButton: ToggleButton(
-          deactivatedIcon: Icon(
-            Icons.favorite_border,
-            color: Colors.white,
-          ),
-          activatedIcon: Icon(
-            Icons.favorite,
-            color: Colors.white,
-          ),
-          onActivated: () => Provider.of<Favorites>(context).data.add(image),
-          onDeactivated: () =>
-              Provider.of<Favorites>(context).data.remove(image),
-          isActivated: () =>
-              Provider.of<Favorites>(context).data.contains(image),
-          color: Colors.red,
+        floatingActionButton: ValueListenableBuilder<String>(
+          valueListenable: image,
+          builder: (BuildContext context, String image, Widget child) {
+            return Consumer<Favorites>(
+              builder:
+                  (BuildContext context, Favorites favorites, Widget child) {
+                return ToggleButton(
+                  deactivatedIcon: Icon(
+                    Icons.favorite_border,
+                    color: Colors.white,
+                  ),
+                  activatedIcon: Icon(
+                    Icons.favorite,
+                    color: Colors.white,
+                  ),
+                  onActivated: () => favorites.add(image),
+                  onDeactivated: () => favorites.remove(image),
+                  isActivated: () => favorites.contains(image),
+                  color: Colors.red,
+                );
+              },
+            );
+          },
         ));
   }
 }
