@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 class LifecycleEventHandler extends WidgetsBindingObserver {
   LifecycleEventHandler(
@@ -11,12 +11,6 @@ class LifecycleEventHandler extends WidgetsBindingObserver {
   final Function onSuspending;
   final Function onInactive;
   final Function onPaused;
-
-//  @override
-//  Future<bool> didPopRoute()
-
-//  @override
-//  void didHaveMemoryPressure()
 
   @override
   Future<void> didChangeAppLifecycleState(AppLifecycleState state) async {

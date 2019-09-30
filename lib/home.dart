@@ -4,6 +4,7 @@ import 'breed.dart';
 import 'data.dart';
 import 'favoritesView.dart';
 import 'menu.dart';
+import 'package:provider/provider.dart';
 
 class Home extends StatefulWidget {
   final Future<Map> breeds = getbreeds();
@@ -17,54 +18,59 @@ class _HomeState extends State<Home> {
   Widget build(BuildContext context) {
     return Scaffold(
       drawer: Menu(),
-      appBar: AppBar(
-        title: Text('Dogs'),
-        actions: <Widget>[
-          IconButton(
-            icon: Icon(Icons.favorite),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => FavoritesView()),
-              );
-            },
-          ),
-          
-          
-        ],
-      ),
-      body: FutureBuilder(
-        future: widget.breeds,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.done) {
-            if (snapshot.hasData) {
-              return RefreshIndicator(
-                onRefresh: () {
-                  setState(() {});
-                  return widget.breeds;
-                },
-                child: ListView.builder(
-                  padding: EdgeInsets.all(8.0),
-                  itemCount: snapshot.data.length,
-                  itemBuilder: (context, i) {
-                    return Category(
-                      breed: snapshot.data.keys.elementAt(i),
-                      subBreeds:
-                          snapshot.data.values.elementAt(i).cast<String>(),
-                    );
+      appBar: buildAppBar(context),
+      body: Material(
+        color: Provider.of<Settings>(context).backgroundColor,
+        child: FutureBuilder(
+          future: widget.breeds,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.done) {
+              if (snapshot.hasData) {
+                return RefreshIndicator(
+                  onRefresh: () {
+                    setState(() {});
+                    return widget.breeds;
                   },
-                ),
-              );
+                  child: ListView.builder(
+                    padding: EdgeInsets.all(8.0),
+                    itemCount: snapshot.data.length,
+                    itemBuilder: (context, i) {
+                      return Category(
+                        breed: snapshot.data.keys.elementAt(i),
+                        subBreeds:
+                            snapshot.data.values.elementAt(i).cast<String>(),
+                      );
+                    },
+                  ),
+                );
+              } else {
+                throw snapshot.error;
+              }
             } else {
-              throw snapshot.error;
+              return Center(
+                child: CircularProgressIndicator(),
+              );
             }
-          } else {
-            return Center(
-              child: CircularProgressIndicator(),
-            );
-          }
-        },
+          },
+        ),
       ),
+    );
+  }
+
+  AppBar buildAppBar(BuildContext context) {
+    return AppBar(
+      title: Text('Dogs'),
+      actions: <Widget>[
+        IconButton(
+          icon: Icon(Icons.favorite),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => FavoritesView()),
+            );
+          },
+        ),
+      ],
     );
   }
 }
@@ -91,6 +97,7 @@ class Category extends StatelessWidget {
       padding: EdgeInsets.all(5.0),
       height: 230,
       child: Card(
+        color: Provider.of<Settings>(context).cardColor,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(15.0),
         ),
@@ -98,10 +105,7 @@ class Category extends StatelessWidget {
         child: Column(
           children: <Widget>[
             BreedButton(breed: breed),
-            ThambnailList(
-                images: images,
-                subBreeds: subBreeds,
-                breed: breed)
+            ThambnailList(images: images, subBreeds: subBreeds, breed: breed)
           ],
         ),
       ),
@@ -128,16 +132,18 @@ class ThambnailList extends StatelessWidget {
         padding: const EdgeInsets.only(bottom: 10),
         child: LayoutBuilder(
           builder: (context, constraints) {
-            final screenWidth=MediaQuery.of(context).size.width;
+            final screenWidth = MediaQuery.of(context).size.width;
             return OverflowBox(
               maxWidth: screenWidth,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
-                itemCount: images.length+2,
+                itemCount: images.length + 2,
                 itemBuilder: (context, j) {
-                  if(j==0 || j==images.length+1)
-                    return Container(width: (screenWidth- constraints.biggest.width)/2,);
-                  final i=j-1;
+                  if (j == 0 || j == images.length + 1)
+                    return Container(
+                      width: (screenWidth - constraints.biggest.width) / 2,
+                    );
+                  final i = j - 1;
                   return Thambnail(
                     image: images[i],
                     name: subBreeds.length == 0 ? breed : subBreeds[i],
@@ -206,6 +212,7 @@ class Thambnail extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      color: Provider.of<Settings>(context).cardColor,
       elevation: 5,
       clipBehavior: Clip.hardEdge,
       child: InkWell(

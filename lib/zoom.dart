@@ -15,14 +15,10 @@ class Zoom extends StatelessWidget {
     try {
       return controller.page.toInt();
     } catch (e) {
-      // if (!(e is AssertionError))
-      //   rethrow;
-      // else
       return controller.initialPage;
     }
   }
 
-  // String get image => images[current];
   final ValueNotifier<String> image = ValueNotifier<String>(null);
   final ValueNotifier<int> index = ValueNotifier<int>(null);
 
@@ -31,8 +27,6 @@ class Zoom extends StatelessWidget {
         super(key: key) {
     image.value = images[initial];
     index.value = initial;
-    // _controller
-    //     .addListener(() => image.value = images[_controller.page.round()]);
     controller.addListener(() => index.value = controller.page.round());
     index.addListener(() => image.value = images[index.value]);
   }

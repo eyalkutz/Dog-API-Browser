@@ -26,15 +26,7 @@ class _ToggleButtonState extends State<ToggleButton> {
       backgroundColor: widget.color,
       child:
           widget.isActivated() ? widget.activatedIcon : widget.deactivatedIcon,
-      // onPressed: () {
-      //   if (widget.isActivated()) {
-      //     widget.onDeactivated();
-      //   } else {
-      //     widget.onActivated();
-      //   }
-      //   setState(() {});
-      // },
-      onPressed: ()=>setState((){
+      onPressed: () => setState(() {
         if (widget.isActivated())
           widget.onDeactivated();
         else

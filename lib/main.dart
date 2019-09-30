@@ -23,7 +23,7 @@ class App extends StatelessWidget {
           return MultiProvider(
               providers: [
                 ChangeNotifierProvider(
-                  builder: (context)=>data.favorites,
+                  builder: (context) => data.favorites,
                 ),
                 ChangeNotifierProvider<Settings>(
                   builder: (context) => data.settings,
@@ -35,6 +35,7 @@ class App extends StatelessWidget {
                     theme: ThemeData(
                       brightness: settings.brightness,
                       primaryColor: settings.primaryColor,
+                      backgroundColor: settings.backgroundColor,
                     ),
                     home: Home(),
                   );

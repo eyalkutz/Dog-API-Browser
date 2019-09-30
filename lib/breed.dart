@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'favoritesView.dart';
 import 'menu.dart';
 import 'data.dart';
@@ -69,27 +70,31 @@ class ImageDisplay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     double picSize = MediaQuery.of(context).size.width / 3;
-    return GridView.builder(
-      itemCount: pics.length,
-      gridDelegate:
-          SliverGridDelegateWithMaxCrossAxisExtent(maxCrossAxisExtent: picSize),
-      addAutomaticKeepAlives: false,
-      addRepaintBoundaries: false,
-      itemBuilder: (context, i) {
-        String image = pics[i];
-        return Thambnail(pics: pics, image: image,i: i,);
-      },
+    return Material(
+      color: Provider.of<Settings>(context).backgroundColor,
+      child: GridView.builder(
+        itemCount: pics.length,
+        gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+            maxCrossAxisExtent: picSize),
+        addAutomaticKeepAlives: false,
+        addRepaintBoundaries: false,
+        itemBuilder: (context, i) {
+          String image = pics[i];
+          return Thambnail(
+            pics: pics,
+            image: image,
+            i: i,
+          );
+        },
+      ),
     );
   }
 }
 
 class Thambnail extends StatelessWidget {
-  const Thambnail({
-    Key key,
-    @required this.pics,
-    @required this.image,
-    @required this.i
-  }) : super(key: key);
+  const Thambnail(
+      {Key key, @required this.pics, @required this.image, @required this.i})
+      : super(key: key);
 
   final List<String> pics;
   final String image;

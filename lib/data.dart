@@ -18,35 +18,44 @@ class Data {
 
 class Favorites extends ChangeNotifier {
   File file;
-  List<String> data;
-  Favorites({this.file, this.data}) {
+  List<String> _data;
+  List<String> get data => _data;
+  set data(List<String> value) {
+    _data = value;
+    notifyListeners();
+  }
+
+  Favorites({this.file, List<String> data}) : _data = data {
     WidgetsBinding.instance.addObserver(LifecycleEventHandler(
       onPaused: save,
     ));
   }
 
-  void add(String value){
-    data.add(value);
+  void add(String value) {
+    _data.add(value);
     notifyListeners();
   }
 
-  void remove(String item){
-    data.remove(item);
+  void remove(String item) {
+    _data.remove(item);
     notifyListeners();
   }
 
-  void removeAt(int index){
-    data.removeAt(index);
+  void removeAt(int index) {
+    _data.removeAt(index);
     notifyListeners();
   }
 
-  void empty()=>data=<String>[];
-
-  bool contains(String item){
-    return data.contains(item);
+  void empty() {
+    _data = <String>[];
+    notifyListeners();
   }
 
-  int get length=>data.length;
+  bool contains(String item) {
+    return _data.contains(item);
+  }
+
+  int get length => _data.length;
 
   static Future<Favorites> load() async {
     var directory = await getApplicationDocumentsDirectory();
@@ -63,10 +72,11 @@ class Favorites extends ChangeNotifier {
 }
 
 class Settings extends ChangeNotifier {
-  Settings({file, brightness, primarySwatch}) {
+  Settings({file, brightness, primaryColor, backgroundColor}) {
     _file = file;
     _brightness = brightness;
-    _primaryColor = primarySwatch;
+    _primaryColor = primaryColor;
+    _backgroundColor = backgroundColor;
     WidgetsBinding.instance.addObserver(LifecycleEventHandler(
       onPaused: save,
     ));
@@ -76,13 +86,19 @@ class Settings extends ChangeNotifier {
     this._file = file;
     this._brightness = Brightness.values[json['brightness']];
     this._primaryColor = Color(json['primaryColor']);
+    this._backgroundColor = Color(json['backgroundColor']);
+    this._cardColor = Color(json['cardColor']);
     WidgetsBinding.instance.addObserver(LifecycleEventHandler(
       onPaused: save,
     ));
   }
 
-  Map<String, dynamic> toJson() =>
-      {'brightness': brightness.index, 'primaryColor': primaryColor.value};
+  Map<String, dynamic> toJson() => {
+        'brightness': brightness.index,
+        'primaryColor': primaryColor.value,
+        'backgroundColor': backgroundColor.value,
+        'cardColor': _cardColor.value
+      };
 
   File _file;
   File get file => _file;
@@ -101,6 +117,25 @@ class Settings extends ChangeNotifier {
     notifyListeners();
   }
 
+  Color _backgroundColor;
+  Color get backgroundColor => _backgroundColor;
+  set backgroundColor(value) {
+    _backgroundColor = value;
+    if (_backgroundColor != null)
+      _cardColor = Color.fromRGBO(
+        (_backgroundColor.red * 0.9).round(),
+        (_backgroundColor.green * 0.9).round(),
+        (_backgroundColor.blue * 0.9).round(),
+        1.0,
+      );
+    else
+      _cardColor = null;
+    notifyListeners();
+  }
+
+  Color _cardColor;
+  Color get cardColor => _cardColor;
+
   static Future<Settings> load() async {
     var directory = await getApplicationDocumentsDirectory();
     var path = directory.path;
@@ -112,7 +147,7 @@ class Settings extends ChangeNotifier {
       return Settings(
         file: file,
         brightness: Brightness.dark,
-        primarySwatch: null,
+        primaryColor: Colors.blue,
       );
     }
   }
